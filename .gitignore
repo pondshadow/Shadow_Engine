@@ -1,0 +1,11 @@
+
+# CMake & IDE
+cmake-build-*/
+build/
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# vcpkg (不要同步这个文件夹!)
+vcpkg_installed/
