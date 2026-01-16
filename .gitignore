@@ -7,5 +7,7 @@ build/
 *.swp
 .DS_Store
 
+imgui.ini
+
 # vcpkg (不要同步这个文件夹!)
 vcpkg_installed/
