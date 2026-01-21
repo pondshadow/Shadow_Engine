@@ -4,7 +4,6 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
-// #include "glad.c"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -13,11 +12,11 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#include "../shader.h"
-#include "../camera.h"
-#include "../Functions.h"
+#include "Core/shader.h"
+#include "Core/camera.h"
+#include "Utils/functions.h"
+#include "Core/window.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
@@ -78,47 +77,16 @@ struct SpotLightParams {
 
 int main()
 {
-    // GLFW：实例化窗口
-    // ------------------------------
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    // 窗口创建
+    Window appWindow(SCR_WIDTH, SCR_HEIGHT, "Shadow_Engine");
+    // 获取原生指针，供后续的回调和 ImGui 使用
+    GLFWwindow* nativeWin = appWindow.getNativeWindow();
 
-    #ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-    #endif
-
-    // GLFW：创建窗口
-    // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "BowieEngine", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetCursorPosCallback(nativeWin, mouse_callback);
+    glfwSetScrollCallback(nativeWin, scroll_callback);
 
     // 默认先隐藏光标
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-    // GLAD：加载所有 OpenGL 函数指针
-    // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
+    glfwSetInputMode(nativeWin, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -127,12 +95,12 @@ int main()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplGlfw_InitForOpenGL(nativeWin, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
     // 创建并编译着色器
-    Shader lightingShader("ColorVS.glsl", "ColorFS.glsl");
-    Shader lightCubeShader("LightVS.glsl", "LightFS.glsl");
+    Shader lightingShader("assets/shaders/ColorVS.glsl", "assets/shaders/ColorFS.glsl");
+    Shader lightCubeShader("assets/shaders/LightVS.glsl", "assets/shaders/LightFS.glsl");
 
     // 设置顶点数据（及缓冲区）并配置顶点属性
 float vertices[] = {
@@ -229,10 +197,10 @@ float vertices[] = {
     glEnableVertexAttribArray(0);
 
     // 加载与创建贴图
-    unsigned int diffuseMap = loadTexture("container2.png");
-    unsigned int specularMap = loadTexture("container2_specular.png");
+    unsigned int diffuseMap = loadTexture("assets/textures/container2.png");
+    unsigned int specularMap = loadTexture("assets/textures/container2_specular.png");
     // 渲染循环
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(nativeWin))
     {
         // 每帧的时间
         // --------------------
@@ -242,7 +210,7 @@ float vertices[] = {
 
         // 输入函数
         // -----
-        processInput(window);
+        processInput(nativeWin);
 
         // 渲染部分
         glClearColor(clearColor[0], clearColor[1], clearColor[2], 1.0f);
@@ -394,8 +362,7 @@ float vertices[] = {
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         // GLFW: 交换颜色缓冲并检查有没有触发事件
-        // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(nativeWin);
         glfwPollEvents();
     }
 
@@ -456,7 +423,6 @@ void processInput(GLFWwindow *window)
 }
 
 // GLFW：当用户改变窗口的大小的时候，调整视口
-// ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
@@ -464,7 +430,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 
 // 鼠标回调函数
-// -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
     // [ImGui] 如果鼠标可见，说明我们在操作 UI，不要旋转相机
@@ -490,7 +455,6 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 }
 
 // 滚轮回调函数
-// ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     // [ImGui] 同样，操作 UI 时不要缩放相机
