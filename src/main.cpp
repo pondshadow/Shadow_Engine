@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 #include "glm/glm.hpp"
@@ -13,11 +13,9 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-#include "functions/shader.h"
-#include "functions/camera.h"
-#include "functions/Functions.h"
-#include "functions/Mesh.h"
-
+#include "../shader.h"
+#include "../camera.h"
+#include "../Functions.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -50,14 +48,14 @@ float clearColor[3] = {0.05f, 0.05f, 0.05f}; // 默认为深灰
 // 定向光参数
 struct DirLightParams {
     bool enable = true;
-    float direction[3] = {-0.2f, -1.0f, -0.3f}; 
+    float direction[3] = {-0.2f, -1.0f, -0.3f};
     float color[3]     = {1.0f, 1.0f, 1.0f};
 } dirLightParams;
 // 点光源 (Point Light) 参数
 struct PointLightParams {
     bool enable = true;
     float color[3]     = {1.0f, 1.0f, 1.0f};
-    
+
     // 衰减系数
     float constant = 1.0f;
     float linear   = 0.09f;
@@ -67,11 +65,11 @@ struct PointLightParams {
 struct SpotLightParams {
     bool enable = true;
     float color[3]     = {1.0f, 1.0f, 1.0f};
-    
+
     // 角度
     float cutOff = 12.5f;
     float outerCutOff = 17.5f;
-    
+
     // 衰减
     float constant = 1.0f;
     float linear   = 0.09f;
@@ -90,10 +88,10 @@ int main()
     #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     #endif
-    
+
     // GLFW：创建窗口
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Shadow Engine", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "BowieEngine", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -107,13 +105,13 @@ int main()
 
     // 默认先隐藏光标
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    
+
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-    
+
     // GLAD：加载所有 OpenGL 函数指针
     // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -123,7 +121,7 @@ int main()
     }
 
     glEnable(GL_DEPTH_TEST);
-    
+
     // [ImGui] 初始化
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -131,10 +129,10 @@ int main()
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-    
+
     // 创建并编译着色器
-    Shader lightingShader("src/shaders/MainVS.glsl", "src/shaders/MainFS.glsl");
-    Shader lightCubeShader("src/shaders/LightVS.glsl", "src/shaders/LightFS.glsl");
+    Shader lightingShader("ColorVS.glsl", "ColorFS.glsl");
+    Shader lightCubeShader("LightVS.glsl", "LightFS.glsl");
 
     // 设置顶点数据（及缓冲区）并配置顶点属性
 float vertices[] = {
@@ -183,16 +181,16 @@ float vertices[] = {
 };
     // 物体位置
     glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f,  0.0f), 
-        glm::vec3( 2.0f,  5.0f, -15.0f), 
-        glm::vec3(-1.5f, -2.2f, -2.5f),  
-        glm::vec3(-3.8f, -2.0f, -12.3f),  
-        glm::vec3( 2.4f, -0.4f, -3.5f),  
-        glm::vec3(-1.7f,  3.0f, -7.5f),  
-        glm::vec3( 1.3f, -2.0f, -2.5f),  
-        glm::vec3( 1.5f,  2.0f, -2.5f), 
-        glm::vec3( 1.5f,  0.2f, -1.5f), 
-        glm::vec3(-1.3f,  1.0f, -1.5f)  
+        glm::vec3( 0.0f,  0.0f,  0.0f),
+        glm::vec3( 2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3( 2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3( 1.3f, -2.0f, -2.5f),
+        glm::vec3( 1.5f,  2.0f, -2.5f),
+        glm::vec3( 1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
     };
     // 点光源位置
     glm::vec3 pointLightPositions[] = {
@@ -201,7 +199,7 @@ float vertices[] = {
         glm::vec3(-4.0f,  2.0f, -12.0f),
         glm::vec3( 0.0f,  0.0f, -3.0f)
     };
-    
+
     // 生成 VAO VBO
     unsigned int VBO, cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
@@ -220,7 +218,7 @@ float vertices[] = {
     // 链接纹理坐标
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
-    
+
     // 生成并绑定 VAO (VBO 保持不变，这里用的同样的顶点数据)
     unsigned int lightCubeVAO;
     glGenVertexArrays(1, &lightCubeVAO);
@@ -229,10 +227,10 @@ float vertices[] = {
     // 链接顶点位置属性
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    
+
     // 加载与创建贴图
-    unsigned int diffuseMap = loadTexture("assets/Textures/container2.png");
-    unsigned int specularMap = loadTexture("assets/Textures/container2_specular.png");
+    unsigned int diffuseMap = loadTexture("container2.png");
+    unsigned int specularMap = loadTexture("container2_specular.png");
     // 渲染循环
     while (!glfwWindowShouldClose(window))
     {
@@ -262,9 +260,9 @@ float vertices[] = {
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::ColorEdit3("Ambient/Background", clearColor);
         ImGui::Checkbox("Unlock Mouse (Left Alt)", &isCursorVisible);
-        
+
         ImGui::Separator();
-        
+
         // 定向光（太阳）
         if (ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_DefaultOpen))
         {
@@ -296,7 +294,7 @@ float vertices[] = {
         }
 
         ImGui::End(); // 结束窗口
-        
+
         //光源移动
         // lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
         // lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
@@ -305,14 +303,14 @@ float vertices[] = {
         lightingShader.use();
         glm::vec3 bgVec = glm::make_vec3(clearColor); // 环境光直接取背景色
         glm::vec3 zero(0.0f);
-        
+
         // 1. 定向光
         // Ambient = 背景色
         // Diffuse = 固有色
         // Specular = 固有色
         glm::vec3 dirCol = glm::make_vec3(dirLightParams.color);
         lightingShader.setVec3("dirLight.direction", dirLightParams.direction[0], dirLightParams.direction[1], dirLightParams.direction[2]);
-        lightingShader.setVec3("dirLight.ambient",  dirLightParams.enable ? bgVec  : zero); 
+        lightingShader.setVec3("dirLight.ambient",  dirLightParams.enable ? bgVec  : zero);
         lightingShader.setVec3("dirLight.diffuse",  dirLightParams.enable ? dirCol : zero);
         lightingShader.setVec3("dirLight.specular", dirLightParams.enable ? dirCol : zero);
         // 2. 点光源
@@ -321,11 +319,11 @@ float vertices[] = {
         {
             std::string base = "pointLights[" + std::to_string(i) + "]";
             lightingShader.setVec3(base + ".position", pointLightPositions[i]);
-            
+
             lightingShader.setVec3(base + ".ambient",  pointLightParams.enable ? bgVec : zero);
             lightingShader.setVec3(base + ".diffuse",  pointLightParams.enable ? ptCol : zero);
             lightingShader.setVec3(base + ".specular", pointLightParams.enable ? ptCol : zero);
-            
+
             lightingShader.setFloat(base + ".constant",  pointLightParams.constant);
             lightingShader.setFloat(base + ".linear",    pointLightParams.linear);
             lightingShader.setFloat(base + ".quadratic", pointLightParams.quadratic);
@@ -335,11 +333,11 @@ float vertices[] = {
         lightingShader.setBool("spotLight.enabled", spotLightParams.enable);
         lightingShader.setVec3("spotLight.position", camera.Position);
         lightingShader.setVec3("spotLight.direction", camera.Front);
-        
+
         lightingShader.setVec3("spotLight.ambient",  bgVec);   // 环境光 = 背景色
         lightingShader.setVec3("spotLight.diffuse",  spotCol); // 漫反射 = 固有色
         lightingShader.setVec3("spotLight.specular", spotCol); // 镜面光 = 固有色
-        
+
         lightingShader.setFloat("spotLight.constant",  spotLightParams.constant);
         lightingShader.setFloat("spotLight.linear",    spotLightParams.linear);
         lightingShader.setFloat("spotLight.quadratic", spotLightParams.quadratic);
@@ -362,9 +360,9 @@ float vertices[] = {
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
         lightingShader.setVec3("viewPos", camera.Position);
-        
+
         // 绘制 10 个箱子
-        glBindVertexArray(cubeVAO); 
+        glBindVertexArray(cubeVAO);
         for(unsigned int i = 0; i < 10; i++)
         {
             glm::mat4 model = glm::mat4(1.0f);
@@ -381,17 +379,17 @@ float vertices[] = {
         lightCubeShader.setVec3("lightColor", displayColor);
         lightCubeShader.setMat4("projection", projection);
         lightCubeShader.setMat4("view", view);
-        
+
         glBindVertexArray(lightCubeVAO);
         for (unsigned int i = 0; i < 4; i++)
         {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, pointLightPositions[i]);
-            model = glm::scale(model, glm::vec3(0.2f)); 
+            model = glm::scale(model, glm::vec3(0.2f));
             lightCubeShader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
-    
+
         // [ImGui] 渲染 ImGui (必须在绘制完场景之后)
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -471,7 +469,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
     // [ImGui] 如果鼠标可见，说明我们在操作 UI，不要旋转相机
     if (isCursorVisible) return;
-    
+
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
@@ -497,7 +495,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     // [ImGui] 同样，操作 UI 时不要缩放相机
     if (isCursorVisible) return;
-    
+
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
