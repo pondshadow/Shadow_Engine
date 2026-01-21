@@ -10,4 +10,7 @@ imgui.ini
 
 # vcpkg (不要同步这个文件夹!)
 vcpkg_installed/
+
 CMakePresets.json
+vcpkg.json
+CMakeLists.txt
