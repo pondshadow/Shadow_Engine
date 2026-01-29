@@ -14,7 +14,7 @@
 
 #include "Core/shader.h"
 #include "Core/camera.h"
-#include "Utils/functions.h"
+#include "core/texture.h"
 #include "Core/window.h"
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
